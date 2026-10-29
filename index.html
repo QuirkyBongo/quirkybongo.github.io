@@ -186,6 +186,41 @@
     .reqs dd { margin-bottom: 12px; }
     .wrap { padding: 0 16px; }
   }
+
+  /* Bandwidth calculator */
+  .calc { margin-top: 96px; }
+  .calc-grid { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 7fr); gap: 20px; margin-top: 32px; }
+  .calc-panel { background: var(--surface); border: 1px solid var(--line-strong); border-radius: 12px; padding: 22px; }
+  .calc-panel h3 { font-size: 18px; margin-bottom: 16px; }
+  .field { display: grid; gap: 6px; margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label, .field legend { font-size: 14px; color: var(--text-2); padding: 0; }
+  .field input[type=number], .field select { height: 42px; width: 100%; padding: 0 12px; border-radius: 8px; border: 1px solid var(--line-strong); background: var(--bg-2); color: var(--text); font: 15px var(--body); }
+  .field input[type=number] { font-family: var(--mono); }
+  .field input:focus-visible, .field select:focus-visible { outline: 2px solid var(--green-text); outline-offset: 1px; }
+  .field .hint { font-size: 12.5px; color: var(--text-3); }
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; margin-bottom: 16px; }
+  .field-row:last-child { margin-bottom: 0; }
+  .field-row .field { margin-bottom: 0; }
+  fieldset.field { border: 0; margin: 0 0 16px; padding: 0; min-width: 0; }
+  .seg { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); background: var(--bg-2); border: 1px solid var(--line-strong); border-radius: 8px; padding: 3px; gap: 3px; }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label { text-align: center; font-size: 13.5px; padding: 8px 6px; border-radius: 6px; cursor: pointer; color: var(--text-2); line-height: 1.25; }
+  .seg input:checked + label { background: var(--surface-2); color: var(--text); box-shadow: inset 0 0 0 1px var(--line-strong); }
+  .seg input:focus-visible + label { outline: 2px solid var(--green-text); outline-offset: 1px; }
+  .results { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .result { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; }
+  .result.wide { grid-column: 1 / -1; }
+  .result .k { font-size: 13.5px; color: var(--text-2); }
+  .result .v { font-family: var(--mono); font-size: 26px; color: var(--text); margin-top: 4px; line-height: 1.2; }
+  .result .v small { font-size: 14px; color: var(--text-3); margin-left: 4px; }
+  .result .n { font-size: 12.5px; color: var(--text-3); margin-top: 6px; }
+  .result.key { border-color: color-mix(in srgb, var(--green-text) 40%, var(--line)); background: color-mix(in srgb, var(--green-soft) 60%, var(--bg-2)); }
+  .meter { height: 6px; border-radius: 3px; background: var(--line); margin-top: 10px; overflow: hidden; }
+  .meter span { display: block; height: 100%; background: var(--green-text); border-radius: 3px; width: 0; transition: width .25s; }
+  .calc-notes { margin-top: 16px; font-size: 13.5px; color: var(--text-3); display: grid; gap: 6px; }
+  @media (max-width: 980px) { .calc-grid { grid-template-columns: 1fr; } }
+  @media (max-width: 560px) { .results { grid-template-columns: 1fr; } .result .v { font-size: 22px; } }
 </style>
 </head>
 <body>
@@ -197,6 +232,7 @@
       <a href="#features">Features</a>
       <a href="#branding">Your branding</a>
       <a href="#deploy">Deployment</a>
+      <a href="#bandwidth">Network</a>
       <a href="#privacy">Privacy &amp; security</a>
       <a href="#setup">Setup</a>
       <a href="#faq">FAQ</a>
@@ -372,6 +408,117 @@
           <div class="deploy-foot">Windows: silent MSI, no prompts · Linux: your usual tools</div>
         </div>
       </div>
+
+      <!-- Bandwidth calculator -->
+      <div class="calc" id="bandwidth">
+        <div class="section-head" style="margin-bottom:0">
+          <span class="label">Network</span>
+          <h2>How much bandwidth will it use?</h2>
+          <p>The agent connects out to your server, so there are no inbound firewall rules, and it only sends screen thumbnails while a teacher has the class open. An unchanged screen isn't sent again. Enter your numbers to see the load on your network.</p>
+        </div>
+
+        <div class="calc-grid">
+          <form class="calc-panel" id="calc-form" aria-label="Bandwidth calculator inputs" onsubmit="return false">
+            <h3>Your school</h3>
+            <div class="field">
+              <label for="c-devices">Devices with the EduDesk agent</label>
+              <input id="c-devices" type="number" min="1" max="100000" step="1" value="400" inputmode="numeric">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="c-classes">Lessons watched at once</label>
+                <input id="c-classes" type="number" min="0" max="2000" step="1" value="10" inputmode="numeric">
+              </div>
+              <div class="field">
+                <label for="c-perclass">Laptops per class</label>
+                <input id="c-perclass" type="number" min="1" max="200" step="1" value="25" inputmode="numeric">
+              </div>
+            </div>
+            <fieldset class="field">
+              <legend>What students are doing</legend>
+              <div class="seg">
+                <input type="radio" name="c-activity" id="a-low" value="0.2"><label for="a-low">Reading, writing</label>
+                <input type="radio" name="c-activity" id="a-mid" value="0.5" checked><label for="a-mid">Typical lesson</label>
+                <input type="radio" name="c-activity" id="a-high" value="0.9"><label for="a-high">Video, scrolling</label>
+              </div>
+            </fieldset>
+            <div class="field-row">
+              <div class="field">
+                <label for="c-size">Thumbnail width</label>
+                <select id="c-size">
+                  <option value="320" selected>320 px (default)</option>
+                  <option value="480">480 px</option>
+                  <option value="640">640 px (maximum)</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="c-quality">Image quality</label>
+                <select id="c-quality">
+                  <option value="30" selected>Low (default)</option>
+                  <option value="50">Medium</option>
+                  <option value="70">High (maximum)</option>
+                </select>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="c-poll">Dashboard refresh</label>
+                <select id="c-poll">
+                  <option value="1000" selected>Every second</option>
+                  <option value="500">Twice a second</option>
+                  <option value="2000">Every 2 seconds</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="c-hours">Supervised hours per day</label>
+                <input id="c-hours" type="number" min="0" max="24" step="0.5" value="6" inputmode="decimal">
+              </div>
+            </div>
+          </form>
+
+          <div class="calc-panel" aria-live="polite">
+            <h3>Estimated load</h3>
+            <div class="results">
+              <div class="result key">
+                <div class="k">Per classroom Wi-Fi (laptops → server)</div>
+                <div class="v" id="r-room">–</div>
+                <div class="n" id="r-room-n"></div>
+                <div class="meter" aria-hidden="true"><span id="m-room"></span></div>
+              </div>
+              <div class="result key">
+                <div class="k">Per teacher's dashboard (server → teacher)</div>
+                <div class="v" id="r-teacher">–</div>
+                <div class="n" id="r-teacher-n"></div>
+                <div class="meter" aria-hidden="true"><span id="m-teacher"></span></div>
+              </div>
+              <div class="result">
+                <div class="k">Server, incoming at peak</div>
+                <div class="v" id="r-in">–</div>
+                <div class="n">Thumbnails from every watched laptop, plus idle agents</div>
+              </div>
+              <div class="result">
+                <div class="k">Server, outgoing at peak</div>
+                <div class="v" id="r-out">–</div>
+                <div class="n">Thumbnails to every teacher's dashboard</div>
+              </div>
+              <div class="result">
+                <div class="k">When nobody is watching</div>
+                <div class="v" id="r-idle">–</div>
+                <div class="n" id="r-idle-n"></div>
+              </div>
+              <div class="result">
+                <div class="k">Data per school day</div>
+                <div class="v" id="r-day">–</div>
+                <div class="n">Server in + out, all on your own network</div>
+              </div>
+            </div>
+            <div class="calc-notes">
+              <span id="r-verdict"></span>
+              <span>Figures were measured with the EduDesk agent on typical classroom screens: documents, websites, web apps and video. A 320-pixel thumbnail averages about 6&nbsp;KB, and an idle agent uses about 0.25&nbsp;kbit/s. Locking, unlocking and messages add less than 1&nbsp;KB each. A new logo or lock-screen image is downloaded once by each device.</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -470,6 +617,10 @@
           <p>No. Any MDM or deployment tool that can install an MSI can roll out the agent, including Configuration Manager and Group Policy. Intune adds one extra: EduDesk keeps its device list in sync with it, so new laptops appear by themselves. Without it, admins add devices by serial number and hostname.</p>
         </details>
         <details>
+          <summary>How much network bandwidth does EduDesk use?</summary>
+          <p>Very little. A watched laptop sends a small thumbnail at most once a second, and only when its screen has changed, which typically comes to 20–50&nbsp;kbit/s. Laptops nobody is watching use about 0.25&nbsp;kbit/s to stay connected. Try the <a href="#bandwidth">bandwidth calculator</a> with your own numbers.</p>
+        </details>
+        <details>
           <summary>Does it work on Macs or Chromebooks?</summary>
           <p>Not at the moment. The EduDesk agent runs on Windows and Linux.</p>
         </details>
@@ -508,6 +659,7 @@
       <a href="#features">Features</a>
       <a href="#branding">Your branding</a>
       <a href="#deploy">Deployment</a>
+      <a href="#bandwidth">Network</a>
       <a href="#privacy">Privacy &amp; security</a>
       <a href="#faq">FAQ</a>
       <a data-demo href="mailto:demo@edudesk.example?subject=EduDesk%20demo">Contact</a>
@@ -527,6 +679,95 @@
     }
     var y = document.getElementById("year");
     if (y) y.textContent = String(new Date().getFullYear());
+  })();
+
+  // Bandwidth calculator. The model and figures come from measurements of the
+  // EduDesk agent (see AGENT_DEPLOYMENT.md, "Bandwidth"):
+  //  - average JPEG thumbnail of typical classroom screens, in KB, by width x quality
+  //  - a watched laptop sends a frame when its screen changed in the last second
+  //    (activity = share of seconds with a change); unchanged screens send nothing
+  //  - the dashboard polls each tile; unchanged tiles get a ~700-byte 304 reply
+  //  - an idle, connected agent uses ~0.25 kbit/s (heartbeats over TLS)
+  (function () {
+    var SIZES_KB = {
+      320: { 30: 5.8, 50: 7.3, 70: 9.1 },
+      480: { 30: 10.6, 50: 13.6, 70: 17.5 },
+      640: { 30: 17.0, 50: 22.2, 70: 29.1 }
+    };
+    var OVERHEAD = 1.06;         // WebSocket + TCP/IP + TLS framing per frame
+    var REVALIDATE_BYTES = 700;  // one unchanged-tile poll (request + 304, with TLS)
+    var IDLE_KBPS = 0.25;        // connected agent, nobody watching
+
+    var form = document.getElementById("calc-form");
+    if (!form) return;
+    function num(id, fallback, min, max) {
+      var v = parseFloat(document.getElementById(id).value);
+      if (!isFinite(v)) v = fallback;
+      return Math.min(max, Math.max(min, v));
+    }
+    function rate(kbps) {
+      if (kbps >= 1000000) return [(kbps / 1000000).toFixed(kbps >= 10000000 ? 0 : 1), "Gbit/s"];
+      if (kbps >= 1000) return [(kbps / 1000).toFixed(kbps >= 10000 ? 0 : 1), "Mbit/s"];
+      return [kbps < 10 ? kbps.toFixed(1) : Math.round(kbps).toString(), "kbit/s"];
+    }
+    function volume(bytes) {
+      if (bytes >= 1e9) return [(bytes / 1e9).toFixed(1), "GB"];
+      return [Math.round(bytes / 1e6).toString(), "MB"];
+    }
+    function show(id, pair) {
+      document.getElementById(id).innerHTML = pair[0] + "<small>" + pair[1] + "</small>";
+    }
+    function meter(id, kbps, capacityKbps) {
+      document.getElementById(id).style.width = Math.min(100, Math.max(2, kbps / capacityKbps * 100)) + "%";
+    }
+
+    function update() {
+      var devices = num("c-devices", 400, 1, 100000);
+      var classes = num("c-classes", 10, 0, 2000);
+      var perClass = num("c-perclass", 25, 1, 200);
+      var hours = num("c-hours", 6, 0, 24);
+      var activity = parseFloat((form.querySelector('input[name="c-activity"]:checked') || {}).value || "0.5");
+      var width = document.getElementById("c-size").value;
+      var quality = document.getElementById("c-quality").value;
+      var pollsPerSecond = 1000 / parseFloat(document.getElementById("c-poll").value);
+
+      var frameBytes = SIZES_KB[width][quality] * 1024;
+      var framesPerSecond = Math.min(activity, pollsPerSecond, 1);
+
+      // per watched laptop, kbit/s
+      var upKbps = activity * frameBytes * OVERHEAD * 8 / 1000 + IDLE_KBPS;
+      var downKbps = (framesPerSecond * (frameBytes * OVERHEAD + REVALIDATE_BYTES)
+                      + Math.max(pollsPerSecond - framesPerSecond, 0) * REVALIDATE_BYTES) * 8 / 1000;
+
+      var watched = Math.min(classes * perClass, devices);
+      var roomKbps = perClass * upKbps;
+      var teacherKbps = perClass * downKbps;
+      var inKbps = watched * upKbps + (devices - watched) * IDLE_KBPS;
+      var outKbps = watched * downKbps;
+      var idleKbps = devices * IDLE_KBPS;
+      var dayBytes = (inKbps + outKbps) * 1000 / 8 * hours * 3600 + idleKbps * 1000 / 8 * (24 - hours) * 3600;
+
+      show("r-room", rate(roomKbps));
+      show("r-teacher", rate(teacherKbps));
+      show("r-in", rate(inKbps));
+      show("r-out", rate(outKbps));
+      show("r-idle", rate(idleKbps));
+      show("r-day", volume(dayBytes));
+      document.getElementById("r-room-n").textContent = Math.round(upKbps) + " kbit/s per laptop while watched";
+      document.getElementById("r-teacher-n").textContent = Math.round(downKbps) + " kbit/s per tile on screen";
+      document.getElementById("r-idle-n").textContent = devices + " connected agents";
+      // meters against a conservative 50 Mbit/s of usable Wi-Fi per classroom
+      meter("m-room", roomKbps, 50000);
+      meter("m-teacher", teacherKbps, 50000);
+      var share = Math.max(roomKbps, teacherKbps) / 50000 * 100;
+      document.getElementById("r-verdict").textContent = share < 1
+        ? "That's under 1% of a typical classroom Wi-Fi access point (about 50 Mbit/s usable)."
+        : "That's about " + Math.round(share) + "% of a typical classroom Wi-Fi access point (about 50 Mbit/s usable).";
+    }
+
+    form.addEventListener("input", update);
+    form.addEventListener("change", update);
+    update();
   })();
 </script>
 </body>
